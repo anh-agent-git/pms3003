@@ -7,7 +7,13 @@ import RPi.GPIO as GPIO
 import dht11
 from kafka import KafkaProducer
 
-# run aws configure and set AWS Access Key ID and AWS Secret Access Key
+# set sensor environment - indoor/outdoor (0/1)
+environment = 1
+
+# set up gpio serial port
+# /dev/ttyAMA0 -> Bluetooth (or GPIO when Bluetooth module turned off)
+# /dev/ttyS0 -> GPIO serial port (also referenced as '/dev/serial0')
+device = '/dev/serial0' 
 
 # set up kafka server 
 kafka_server = 'xyz'
@@ -21,10 +27,16 @@ topic = 'pms3003'
 producer = KafkaProducer(
     bootstrap_servers=kafka_server,
     sasl_plain_username=kafka_username,
-    sasl_plain_password=kafka_password,
-    security_protocol = 'SASL_SSL',
-    sasl_mechanism = 'SCRAM-SHA-256'
+    sasl_plain_password=kafka_password
 )
+
+#producer = KafkaProducer(
+#    bootstrap_servers=kafka_server,
+#    sasl_plain_username=kafka_username,
+#    sasl_plain_password=kafka_password,
+#    security_protocol = 'SASL_SSL',
+#    sasl_mechanism = 'SCRAM-SHA-256'
+#)
 
 # run in an infinite loop
 while 1:
@@ -50,11 +62,11 @@ while 1:
 
     # call a PMSensor class
     # 0 for indoor sensing, 1 for outdoor
-    pm = PMSensor(1)
+    pm = PMSensor(device, environment)
 
     # wakeup sensor and put into active mode if necessary
-    #pm.write_serial('BM\xe4\x00\x01\x01t', 5)
-    #pm.write_serial('BM\xe1\x00\x01\x01q', 5)
+    #pm.write_serial(b'BM\xe4\x00\x01\x01t', 5)
+    #pm.write_serial(b'BM\xe1\x00\x01\x01q', 5)
 
     # get PM1, PM2.5, PM10 values
     pm1, pm25, pm10 = pm.single_read()
